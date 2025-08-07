@@ -74,10 +74,10 @@ These tests open a headless browser and interact with the application.
 ## Docker Hub Image
 
 Container images for this project are published to Docker Hub under
-https://hub.docker.com/r/thanna96/assignment14.
+https://hub.docker.com/r/thanna96/calculator-web-app.
 Pull and run the latest image using:
 
 ```bash
-docker pull thanna96/assignment14:latest
-docker run -p 8000:8000 thanna96/assignment14:latest
+docker pull thanna96/calculator-web-app:latest
+docker run -p 8000:8000 thanna96/calculator-web-app:latest
 ```
