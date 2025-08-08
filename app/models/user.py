@@ -159,6 +159,25 @@ class User(Base):
         """
         from app.auth.jwt import get_password_hash
         return get_password_hash(password)
+    
+    def change_password(self, current_password: str, new_password: str):
+        """Change the user's password after verifying the current password.
+
+        Args:
+            current_password: The user's current password in plain text.
+            new_password: The new password to set.
+
+        Raises:
+            ValueError: If the current password is incorrect.
+
+        Returns:
+            User: The user instance with an updated password.
+        """
+        if not self.verify_password(current_password):
+            raise ValueError("Incorrect current password")
+        self.password = self.hash_password(new_password)
+        self.updated_at = utcnow()
+        return self
 
     @classmethod
     def register(cls, db, user_data: dict):

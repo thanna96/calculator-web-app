@@ -37,7 +37,7 @@ from app.models.calculation import Calculation  # Database model for calculation
 from app.models.user import User  # Database model for users
 from app.schemas.calculation import CalculationBase, CalculationResponse, CalculationUpdate  # API request/response schemas
 from app.schemas.token import TokenResponse  # API token schema
-from app.schemas.user import UserCreate, UserResponse, UserLogin  # User schemas
+from app.schemas.user import UserCreate,UserResponse,UserLogin,UserUpdate,PasswordUpdate  # User schemas
 from app.database import Base, get_db, engine  # Database connection
 
 
@@ -161,6 +161,11 @@ def edit_calculation_page(request: Request, calc_id: str):
     """
     return templates.TemplateResponse("edit_calculation.html", {"request": request, "calc_id": calc_id})
 
+@app.get("/profile", response_class=HTMLResponse, tags=["web"])
+def profile_page(request: Request):
+    """User profile management page."""
+    return templates.TemplateResponse("profile.html", {"request": request})
+
 
 # ------------------------------------------------------------------------------
 # Health Endpoint
@@ -255,6 +260,62 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
         "token_type": "bearer"
     }
 
+
+# ------------------------------------------------------------------------------
+# User Profile Endpoints
+# ------------------------------------------------------------------------------
+@app.get("/users/me", response_model=UserResponse, tags=["users"])
+async def read_user_profile(current_user: User = Depends(get_current_user)):
+    """Return the current user's profile."""
+    return current_user
+
+
+@app.put("/users/me", response_model=UserResponse, tags=["users"])
+async def update_user_profile(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update the current user's profile information."""
+    update_data = user_update.dict(exclude_unset=True)
+
+    if "email" in update_data:
+        existing_email = db.query(User).filter(
+            User.email == update_data["email"], User.id != current_user.id
+        ).first()
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+    if "username" in update_data:
+        existing_username = db.query(User).filter(
+            User.username == update_data["username"], User.id != current_user.id
+        ).first()
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Username already taken")
+
+    current_user.update(**update_data)
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@app.put("/users/me/password", tags=["users"])
+async def change_user_password(
+    password_update: PasswordUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Change the current user's password."""
+    try:
+        current_user.change_password(
+            password_update.current_password, password_update.new_password
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    db.add(current_user)
+    db.commit()
+    return {"detail": "Password updated successfully"}
 
 # ------------------------------------------------------------------------------
 # Calculations Endpoints (BREAD)
