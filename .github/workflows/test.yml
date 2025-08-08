@@ -99,8 +99,8 @@ jobs:
         with:
           push: true
           tags: |
-            thanna96/assignment14:latest
-            thanna96/assignment14:${{ github.sha }}
+            thanna96/calculator-web-app:latest
+            thanna96/calculator-web-app:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=thanna96/assignment14:cache
+          cache-from: type=registry,ref=thanna96/calculator-web-app:cache
           cache-to: type=inline,mode=max
