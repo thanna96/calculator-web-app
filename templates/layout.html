@@ -61,9 +61,14 @@
         <!-- Right side: user greeting & logout -->
         <div class="flex items-center space-x-4">
           <span id="layoutUserWelcome" class="text-sm font-medium text-white hidden md:block"></span>
+          <a
+            id="layoutProfileLink"
+            href="/profile"
+            class="px-4 py-2 rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors duration-200 font-medium hidden sm:inline"
+          >Profile</a>
           <button
             id="layoutLogoutBtn"
-            class="px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors duration-200 
+            class="px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors duration-200
                   font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
           >
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,13 +141,17 @@
 
     // Logout button logic
     const logoutBtn = document.getElementById('layoutLogoutBtn');
+    const profileLink = document.getElementById('layoutProfileLink');
     if (logoutBtn) {
       // Only show logout button if user is logged in
       const token = localStorage.getItem('access_token');
       if (!token) {
         logoutBtn.classList.add('hidden');
+        if (profileLink) profileLink.classList.add('hidden');
       } else {
         logoutBtn.classList.remove('hidden');
+        if (profileLink) profileLink.classList.remove('hidden');
+
         
         // Attach logout handler
         logoutBtn.addEventListener('click', function() {
