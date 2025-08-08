@@ -265,7 +265,7 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 # User Profile Endpoints
 # ------------------------------------------------------------------------------
 @app.get("/users/me", response_model=UserResponse, tags=["users"])
-async def read_user_profile(current_user: User = Depends(get_current_user)):
+async def read_user_profile(current_user: User = Depends(get_current_active_user)):
     """Return the current user's profile."""
     return current_user
 
@@ -273,7 +273,7 @@ async def read_user_profile(current_user: User = Depends(get_current_user)):
 @app.put("/users/me", response_model=UserResponse, tags=["users"])
 async def update_user_profile(
     user_update: UserUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """Update the current user's profile information."""
@@ -303,7 +303,7 @@ async def update_user_profile(
 @app.put("/users/me/password", tags=["users"])
 async def change_user_password(
     password_update: PasswordUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """Change the current user's password."""
