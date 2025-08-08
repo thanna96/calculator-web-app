@@ -265,7 +265,7 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 # User Profile Endpoints
 # ------------------------------------------------------------------------------
 @app.get("/users/me", response_model=UserResponse, tags=["users"])
-async def read_user_profile(current_user: User = Depends(get_current_active_user)):
+async def read_user_profile(current_user: UserResponse = Depends(get_current_active_user)):
     """Return the current user's profile."""
     return current_user
 
@@ -273,11 +273,14 @@ async def read_user_profile(current_user: User = Depends(get_current_active_user
 @app.put("/users/me", response_model=UserResponse, tags=["users"])
 async def update_user_profile(
     user_update: UserUpdate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: UserResponse = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """Update the current user's profile information."""
     update_data = user_update.dict(exclude_unset=True)
+    user_db = db.query(User).filter(User.id == current_user.id).first()
+    if not user_db:
+        raise HTTPException(status_code=404, detail="User not found")
 
     if "email" in update_data:
         existing_email = db.query(User).filter(
@@ -293,27 +296,31 @@ async def update_user_profile(
         if existing_username:
             raise HTTPException(status_code=400, detail="Username already taken")
 
-    current_user.update(**update_data)
-    db.add(current_user)
+    user_db.update(**update_data)
+    db.add(user_db)
     db.commit()
-    db.refresh(current_user)
-    return current_user
+    db.refresh(user_db)
+    return user_db
 
 
 @app.put("/users/me/password", tags=["users"])
 async def change_user_password(
     password_update: PasswordUpdate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: UserResponse = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """Change the current user's password."""
+    user_db = db.query(User).filter(User.id == current_user.id).first()
+    if not user_db:
+        raise HTTPException(status_code=404, detail="User not found")
+
     try:
-        current_user.change_password(
+        user_db.change_password(
             password_update.current_password, password_update.new_password
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    db.add(current_user)
+    db.add(user_db)
     db.commit()
     return {"detail": "Password updated successfully"}
 
