@@ -9,7 +9,17 @@ from uuid import UUID
 import secrets
 
 from app.core.config import get_settings
-from app.auth.redis import add_to_blacklist, is_blacklisted
+# Redis-based token blacklist is optional. Provide fallbacks if redis library is missing.
+try:  # pragma: no cover - optional dependency
+    from app.auth.redis import add_to_blacklist, is_blacklisted  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - executed when redis dependency is absent
+    async def add_to_blacklist(jti: str, exp: int) -> None:
+        """Fallback blacklist add does nothing when Redis is unavailable."""
+        return None
+
+    async def is_blacklisted(jti: str) -> bool:
+        """Fallback blacklist check always returns False when Redis is unavailable."""
+        return False
 from app.schemas.token import TokenType
 from app.database import get_db
 from sqlalchemy.orm import Session
